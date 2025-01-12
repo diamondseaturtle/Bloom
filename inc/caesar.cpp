@@ -21,6 +21,9 @@ bool Decode(string& ctext, int key) {
     return Encode(ctext, (-key % 26)); // lol
 }
 
+// i am avoiding classes for now 
+// Perhaps a struct?
+
 void Usage(char* prog) {
     cout << "Usage: " << prog << " [options] [file.txt] [shift]" << endl 
         << "    Options: " << endl << 
