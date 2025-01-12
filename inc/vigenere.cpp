@@ -6,10 +6,19 @@
 #include <sstream> 
 #include <fstream>
 
+#include "caesar.cpp"
+
 using namespace std; 
+//using namespace Vigenere;
 
+
+namespace Vigenere {
 bool Encode(string& ptext, string& key) {
-
+    for (int i = 0; i < ptext.length(); i++) {
+        string code = string(1, tolower(ptext[i]));
+        Caesar::Encode(code, key[i % key.length()] - 'a');
+        ptext[i] = code[0];
+    }
     return true;
 }
 
@@ -21,11 +30,12 @@ void Usage(char* prog) {
         << "    Options: " << endl << 
             "       -e     Encode plaintext" << endl << 
             "       -d    Decode ciphertext" << endl;
+}
 } 
 
 int main(int argc, char* argv[]) {
     if (argc != 4) {
-        Usage(argv[0]); 
+        Vigenere::Usage(argv[0]); 
         return 0;
     }
 
@@ -39,11 +49,11 @@ int main(int argc, char* argv[]) {
 
     if (option == "-e") {
         cout << "Encoding " << text << endl;
-        Encode(text, key); 
+        Vigenere::Encode(text, key); 
         cout << text << endl;
     } else {
         cout << "Decoding " << text << endl; 
-        Decode(text, key); 
+        // Decode(text, key); 
         cout << text << endl;
     }
 }

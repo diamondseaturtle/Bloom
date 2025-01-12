@@ -7,6 +7,9 @@
 #include <fstream>
 
 using namespace std; 
+//using namespace Caesar;
+
+namespace Caesar {
 
 bool Encode(string& ptext, int key) {
     for (auto& c : ptext) {
@@ -30,28 +33,29 @@ void Usage(char* prog) {
             "       -e     Encode plaintext" << endl << 
             "       -d    Decode ciphertext" << endl;
 } 
-
-int main(int argc, char* argv[]) {
-    if (argc != 4) {
-        Usage(argv[0]); 
-        return 0;
-    }
-
-    ifstream t(argv[2]);
-    stringstream buf;
-    buf << t.rdbuf(); 
-
-    string option = argv[1];
-    string text = buf.str(); 
-    int key = atoi(argv[3]);
-
-    if (option == "-e") {
-        cout << "Encoding " << text << endl;
-        Encode(text, key); 
-        cout << text << endl;
-    } else {
-        cout << "Decoding " << text << endl; 
-        Decode(text, key); 
-        cout << text << endl;
-    }
 }
+
+// int main(int argc, char* argv[]) {
+//     if (argc != 4) {
+//         Usage(argv[0]); 
+//         return 0;
+//     }
+
+//     ifstream t(argv[2]);
+//     stringstream buf;
+//     buf << t.rdbuf(); 
+
+//     string option = argv[1];
+//     string text = buf.str(); 
+//     int key = atoi(argv[3]);
+
+//     if (option == "-e") {
+//         cout << "Encoding " << text << endl;
+//         Encode(text, key); 
+//         cout << text << endl;
+//     } else {
+//         cout << "Decoding " << text << endl; 
+//         Decode(text, key); 
+//         cout << text << endl;
+//     }
+// }
