@@ -7,7 +7,6 @@
 #include <fstream>
 
 using namespace std; 
-//using namespace Caesar;
 
 namespace Caesar {
 
@@ -35,27 +34,27 @@ void Usage(char* prog) {
 } 
 }
 
-// int main(int argc, char* argv[]) {
-//     if (argc != 4) {
-//         Usage(argv[0]); 
-//         return 0;
-//     }
+int main(int argc, char* argv[]) {
+    if (argc != 4) {
+        Caesar::Usage(argv[0]); 
+        return 0;
+    }
 
-//     ifstream t(argv[2]);
-//     stringstream buf;
-//     buf << t.rdbuf(); 
+    ifstream t(argv[2]);
+    stringstream buf;
+    buf << t.rdbuf(); 
 
-//     string option = argv[1];
-//     string text = buf.str(); 
-//     int key = atoi(argv[3]);
+    string option = argv[1];
+    string text = buf.str(); 
+    int key = atoi(argv[3]);
 
-//     if (option == "-e") {
-//         cout << "Encoding " << text << endl;
-//         Encode(text, key); 
-//         cout << text << endl;
-//     } else {
-//         cout << "Decoding " << text << endl; 
-//         Decode(text, key); 
-//         cout << text << endl;
-//     }
-// }
+    if (option == "-e") {
+        cout << "Encoding " << text << endl;
+        Caesar::Encode(text, key); 
+        cout << text << endl;
+    } else {
+        cout << "Decoding " << text << endl; 
+        Caesar::Decode(text, key); 
+        cout << text << endl;
+    }
+}

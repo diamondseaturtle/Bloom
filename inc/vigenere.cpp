@@ -9,10 +9,9 @@
 #include "caesar.cpp"
 
 using namespace std; 
-//using namespace Vigenere;
-
 
 namespace Vigenere {
+    
 bool Encode(string& ptext, string& key) {
     for (int i = 0; i < ptext.length(); i++) {
         string code = string(1, tolower(ptext[i]));
@@ -23,6 +22,12 @@ bool Encode(string& ptext, string& key) {
 }
 
 bool Decode(string& ctext, string& key) {
+    for (int i = 0; i < ctext.length(); i++) {
+        string code = string(1, tolower(ctext[i]));
+        Caesar::Decode(code, key[i % key.length()] - 'a');
+        ctext[i] = code[0];
+    }
+    return true;
 }
 
 void Usage(char* prog) {
@@ -53,7 +58,7 @@ int main(int argc, char* argv[]) {
         cout << text << endl;
     } else {
         cout << "Decoding " << text << endl; 
-        // Decode(text, key); 
+        Vigenere::Decode(text, key); 
         cout << text << endl;
     }
 }
