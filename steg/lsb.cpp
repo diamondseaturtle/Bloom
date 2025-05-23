@@ -5,27 +5,53 @@
 #include <cctype>
 #include <sstream> 
 #include <fstream>
+#include <vector>
 
 using namespace std;
 
+#define MAGIC 9595
+
 bool Encode() {
-// twiddle bits
+    // twiddle bits
+    return false;
 }
 
 bool Decode() {
-// somehow get the file from the image
+    // somehow get the file from the image
+    return false;
 }
 
-bool Check() {
-// does file fit into image?
+bool Check(const string& msg, const string& img) {
+    // does file fit into image?
+    return false;
 }
 
-int MBits() {
- // extract msg file bits
+// Dude what version of cpp am i using
+int FileSize(ifstream& file) {
+    file.seekg(0, ios::end); 
+    auto size = file.tellg(); 
+    file.seekg(0, ios::beg); 
+
+    return size;
 }
 
-int IBits() {
-// extract image bits
+vector<char> Bin(ifstream& file, int size) {
+ // extract file
+ vector<char> bytes(size); 
+ if (file.read(reinterpret_cast<char*>(bytes.data()), size)) {
+    return bytes;
+ }
+ 
+ return {};
+}
+
+template<class T>
+void Vector(vector<T>& vec) {
+    for (auto& v : vec) {
+        cout << hex << static_cast<int>(v) << " "; 
+    }
+
+    cout << endl;
 }
 
 void Usage(char* prog) {
@@ -37,5 +63,10 @@ void Usage(char* prog) {
 }
 
 int main(int argc, char* argv[]) {
+    // error check this 
+    ifstream file(argv[1], ifstream::binary); 
+    auto size = FileSize(file); 
+    auto b = Bin(file, size); 
 
+    Vector(b);
 }
