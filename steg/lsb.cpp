@@ -6,10 +6,13 @@
 #include <sstream> 
 #include <fstream>
 #include <vector>
+#include <cassert>
 
 using namespace std;
 
-#define MAGIC 9595
+#define MAGIC "XY95"
+
+typedef unsigned char uchar;
 
 bool encode() {
     // twiddle bits
@@ -35,24 +38,48 @@ int file_size(ifstream& file) {
     return size;
 }
 
-vector<char> bin(ifstream& file, int size) {
- // extract file
- vector<char> bytes(size); 
- if (file.read(reinterpret_cast<char*>(bytes.data()), size)) {
-    return bytes;
- }
- 
- return {};
+vector<uchar> bin(ifstream& file, int size) {
+    // extract file
+    vector<uchar> bytes(size); 
+    if (file.read(reinterpret_cast<char*>(bytes.data()), size)) {
+        return bytes;
+    }
+
+    return {};
 }
 
-vector<char> img_bin(ifstream& file, int size) {
+vector<uchar> ppm_bin(ifstream& file, int size) {
+    string magic;
+    int w, h, max; 
+    vector<char> bytes;
 
+    file >> magic; 
+    if (magic != "P6") {
+        cout << magic << endl;
+        goto error;
+    }
+    cout << "P6 detected" << endl; 
+
+    file >> w >> h >> max; 
+    assert (file.get() == '\n');
+    if (max > 255) {
+        cout << max << endl;
+        goto error; // TODO: Don't do this
+    }
+    cout << "Img dims: " << w << " x " << h << endl;
+    cout << "Max RGB: " << max << endl;
+
+    return bin(file, w * h * 3); 
+
+    error:
+        cout << "Incorrect img file format" << endl; 
+        return {};
 }
 
 template<class T>
 void vecify(vector<T>& vec) {
     for (auto& v : vec) {
-        cout << hex << static_cast<int>(v) << " "; 
+        cout << hex << static_cast<int>((v)) << " "; 
     }
 
     cout << endl;
@@ -72,7 +99,7 @@ int main(int argc, char* argv[]) {
     auto size = file_size(file); 
     cout << size << endl;
 
-    auto b = bin(file, size); 
+    auto b = ppm_bin(file, size); 
 
     vecify(b);
 }
