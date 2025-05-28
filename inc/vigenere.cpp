@@ -12,25 +12,25 @@ using namespace std;
 
 namespace Vigenere {
     
-bool Encode(string& ptext, string& key) {
+bool encode(string& ptext, string& key) {
     for (int i = 0; i < ptext.length(); i++) {
         string code = string(1, tolower(ptext[i]));
-        Caesar::Encode(code, key[i % key.length()] - 'a');
+        Caesar::encode(code, key[i % key.length()] - 'a');
         ptext[i] = code[0];
     }
     return true;
 }
 
-bool Decode(string& ctext, string& key) {
+bool decode(string& ctext, string& key) {
     for (int i = 0; i < ctext.length(); i++) {
         string code = string(1, tolower(ctext[i]));
-        Caesar::Decode(code, key[i % key.length()] - 'a');
+        Caesar::decode(code, key[i % key.length()] - 'a');
         ctext[i] = code[0];
     }
     return true;
 }
 
-void Usage(char* prog) {
+void usage(char* prog) {
     cout << "Usage: " << prog << " [options] [file.txt] [keyword]" << endl 
         << "    Options: " << endl << 
             "       -e     Encode plaintext" << endl << 
@@ -40,7 +40,7 @@ void Usage(char* prog) {
 
 int main(int argc, char* argv[]) {
     if (argc != 4) {
-        Vigenere::Usage(argv[0]); 
+        Vigenere::usage(argv[0]); 
         return 0;
     }
 
@@ -54,11 +54,11 @@ int main(int argc, char* argv[]) {
 
     if (option == "-e") {
         cout << "Encoding " << text << endl;
-        Vigenere::Encode(text, key); 
+        Vigenere::encode(text, key); 
         cout << text << endl;
     } else {
         cout << "Decoding " << text << endl; 
-        Vigenere::Decode(text, key); 
+        Vigenere::decode(text, key); 
         cout << text << endl;
     }
 }

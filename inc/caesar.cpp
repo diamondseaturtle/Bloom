@@ -10,7 +10,7 @@ using namespace std;
 
 namespace Caesar {
 
-bool Encode(string& ptext, int key) {
+bool encode(string& ptext, int key) {
     for (auto& c : ptext) {
         if (isalpha(c)) {
             c = (tolower(c) + key - 'a') % 26 + 'a'; 
@@ -19,14 +19,14 @@ bool Encode(string& ptext, int key) {
     return true;
 }
 
-bool Decode(string& ctext, int key) {
-    return Encode(ctext, (-key % 26)); // lol
+bool decode(string& ctext, int key) {
+    return encode(ctext, (-key % 26)); // lol
 }
 
 // i am avoiding classes for now 
 // Perhaps a struct?
 
-void Usage(char* prog) {
+void usage(char* prog) {
     cout << "Usage: " << prog << " [options] [file.txt] [shift]" << endl 
         << "    Options: " << endl << 
             "       -e     Encode plaintext" << endl << 
@@ -36,7 +36,7 @@ void Usage(char* prog) {
 
 int main(int argc, char* argv[]) {
     if (argc != 4) {
-        Caesar::Usage(argv[0]); 
+        Caesar::usage(argv[0]); 
         return 0;
     }
 
@@ -50,11 +50,11 @@ int main(int argc, char* argv[]) {
 
     if (option == "-e") {
         cout << "Encoding " << text << endl;
-        Caesar::Encode(text, key); 
+        Caesar::encode(text, key); 
         cout << text << endl;
     } else {
         cout << "Decoding " << text << endl; 
-        Caesar::Decode(text, key); 
+        Caesar::decode(text, key); 
         cout << text << endl;
     }
 }
