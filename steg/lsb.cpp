@@ -10,23 +10,31 @@
 
 using namespace std;
 
-#define MAGIC "XY95"
+#define MAGIC "XY"
 
 typedef unsigned char uchar;
+typedef unsigned int uint;
 
-bool encode() {
+// hmmmmmmmmmmmm.
+typedef struct rgb {
+    uint r; 
+    uint b;
+    uint g;
+} rgb, *prgb;
+
+bool encode(ifstream& dfile, ifstream& ifile) {
     // twiddle bits
     return false;
 }
 
-bool decode() {
+bool decode(ifstream& ifile) {
     // somehow get the file from the image
     return false;
 }
 
-bool check(const string& msg, const string& img) {
+bool check(int dsize, int isize) {
     // does file fit into image?
-    return false;
+    return dsize + sizeof(MAGIC) < isize / 3;
 }
 
 // Dude what version of cpp am i using
@@ -39,7 +47,6 @@ int file_size(ifstream& file) {
 }
 
 vector<uchar> bin(ifstream& file, int size) {
-    // extract file
     vector<uchar> bytes(size); 
     if (file.read(reinterpret_cast<char*>(bytes.data()), size)) {
         return bytes;
@@ -72,14 +79,14 @@ vector<uchar> ppm_bin(ifstream& file, int size) {
     return bin(file, w * h * 3); 
 
     error:
-        cout << "Incorrect img file format" << endl; 
+        cout << "Unable to read image" << endl; 
         return {};
 }
 
 template<class T>
 void vecify(vector<T>& vec) {
     for (auto& v : vec) {
-        cout << hex << static_cast<int>((v)) << " "; 
+        cout << hex << static_cast<int>(v) << " "; 
     }
 
     cout << endl;
@@ -87,19 +94,30 @@ void vecify(vector<T>& vec) {
 
 void usage(char* prog) {
     // not how it should work
-    cout << "Usage: " << prog << " [options] [file.txt] [img.png/jpg]" << endl 
+    cout << "Usage: " << prog << " [options] [file.txt] [img.ppm]" << endl 
         << "    Options: " << endl << 
             "       -e     Encode message into image" << endl << 
             "       -d    Decode message from image" << endl;
 }
 
 int main(int argc, char* argv[]) {
-    // error check this 
-    ifstream file(argv[1], ifstream::binary); 
-    auto size = file_size(file); 
-    cout << size << endl;
+    // need function 
+    ifstream dfile(argv[1], ifstream::binary); 
+    auto dsize = file_size(dfile); 
+    cout << dsize << endl;
+    auto d = bin(dfile, dsize); 
+    vecify(d);
 
-    auto b = ppm_bin(file, size); 
+    ifstream ifile(argv[2], ifstream::binary);
+    auto isize = file_size(ifile);
+    cout << isize << endl;
+    auto i = ppm_bin(ifile, isize); 
+    vecify(i);
 
-    vecify(b);
+    if (!check(d.size(), i.size())) {
+        cout << "Size error" << endl;
+        return EXIT_FAILURE;
+    }
+
+    return EXIT_SUCCESS;
 }
