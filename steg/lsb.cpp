@@ -7,7 +7,6 @@
 #include <fstream>
 #include <vector>
 #include <cassert>
-#include <iterator>
 
 using namespace std;
 
@@ -36,11 +35,10 @@ bool encode(const vector<uchar>& data, const vector<uchar>& img) {
 
     vecify(out);
     ofstream output_img; 
-    int dims = 16; 
-    int max = 255;
     output_img.open("output.ppm", std::ios::binary | std::ios::out);
     output_img << "P6\n16 16\n255\n";
     output_img.write(reinterpret_cast<char*>(out.data()), out.size());
+
     return true;
 }
 
