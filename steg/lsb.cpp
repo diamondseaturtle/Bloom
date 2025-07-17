@@ -7,27 +7,44 @@
 #include <fstream>
 #include <vector>
 #include <cassert>
+#include <iterator>
 
 using namespace std;
 
-#define MAGIC "XY"
+#define MAGIC "XY" //tbd on usage!!!!
 
 typedef unsigned char uchar;
 typedef unsigned int uint;
 
-// hmmmmmmmmmmmm.
-typedef struct rgb {
-    uint r; 
-    uint b;
-    uint g;
-} rgb, *prgb;
+template<class T>
+void vecify(vector<T>& vec) {
+    for (auto& v : vec) {
+        cout << hex << static_cast<int>(v) << " "; 
+    }
 
-bool encode(ifstream& dfile, ifstream& ifile) {
-    // twiddle bits
-    return false;
+    cout << endl;
 }
 
-bool decode(ifstream& ifile) {
+bool encode(const vector<uchar>& data, const vector<uchar>& img) {
+    vector<uchar> out(img);
+    int d = 0; 
+    int i = 2; 
+
+    for (; d < data.size(); d++, i += 3) {
+        out[i] = data[d]; 
+    }
+
+    vecify(out);
+    ofstream output_img; 
+    int dims = 16; 
+    int max = 255;
+    output_img.open("output.ppm", std::ios::binary | std::ios::out);
+    output_img << "P6\n16 16\n255\n";
+    output_img.write(reinterpret_cast<char*>(out.data()), out.size());
+    return true;
+}
+
+bool decode(const vector<uchar>& img) {
     // somehow get the file from the image
     return false;
 }
@@ -62,35 +79,25 @@ vector<uchar> ppm_bin(ifstream& file, int size) {
 
     file >> magic; 
     if (magic != "P6") {
-        cout << magic << endl;
-        goto error;
+        cerr << magic << endl;
+        return {};
     }
     cout << "P6 detected" << endl; 
 
     file >> w >> h >> max; 
     assert (file.get() == '\n');
     if (max > 255) {
-        cout << max << endl;
-        goto error; // TODO: Don't do this
+        cerr << max << endl;
+        return {}; 
     }
+
     cout << "Img dims: " << w << " x " << h << endl;
     cout << "Max RGB: " << max << endl;
 
     return bin(file, w * h * 3); 
-
-    error:
-        cout << "Unable to read image" << endl; 
-        return {};
 }
 
-template<class T>
-void vecify(vector<T>& vec) {
-    for (auto& v : vec) {
-        cout << hex << static_cast<int>(v) << " "; 
-    }
 
-    cout << endl;
-}
 
 void usage(char* prog) {
     // not how it should work
@@ -101,23 +108,31 @@ void usage(char* prog) {
 }
 
 int main(int argc, char* argv[]) {
-    // need function 
+    // need function for reading inputs
     ifstream dfile(argv[1], ifstream::binary); 
     auto dsize = file_size(dfile); 
     cout << dsize << endl;
     auto d = bin(dfile, dsize); 
-    vecify(d);
+    if (d.empty()) {
+        cerr << "Data file read error" << endl;
+        return EXIT_FAILURE;
+    }
 
     ifstream ifile(argv[2], ifstream::binary);
     auto isize = file_size(ifile);
     cout << isize << endl;
     auto i = ppm_bin(ifile, isize); 
-    vecify(i);
-
-    if (!check(d.size(), i.size())) {
-        cout << "Size error" << endl;
+    if (i.empty()) {
+        cerr << "Image file read error" << endl;
         return EXIT_FAILURE;
     }
 
+    if (!check(d.size(), i.size())) {
+        cerr << "Data size " << d.size() << " too large for encoding into img size " << i.size() << endl;
+        return EXIT_FAILURE;
+    }
+    encode(d, i);
+    vecify(d);
+    vecify(i);
     return EXIT_SUCCESS;
 }
