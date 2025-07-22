@@ -2,19 +2,46 @@
 #include <stdio.h> 
 #include <string>
 #include <iostream>
-#include <cctype>
-#include <sstream> 
 #include <fstream>
+#include <cctype>
 #include <vector>
 #include <cassert>
 
 using namespace std;
 
-#define MAGIC "XY" //tbd on usage!!!!
+#define CHECK "XY" //tbd on usage!!!!
 
-typedef unsigned char uchar;
-typedef unsigned int uint;
+typedef unsigned char byte;
 
+typedef enum img_type {
+    PPM, 
+    UNKNOWN
+} img_type;
+
+const vector<string> magics {
+    "P6", 
+    "UNKNOWN"
+};
+
+typedef struct ppm_data{
+    int w; 
+    int h; 
+    int max; 
+    vector<byte> data;
+} ppm_data;
+
+typedef struct img {
+    img_type type; 
+    int datasize;
+    ppm_data ppm;
+} img; // screw your variants (to be heap allocated)
+
+typedef struct txt {
+    int size; 
+    vector<byte> data;
+} txt; // redundant fields :heart_eyes:
+
+// debug ---------------------------------------------------
 template<class T>
 void vecify(vector<T>& vec) {
     for (auto& v : vec) {
@@ -24,79 +51,120 @@ void vecify(vector<T>& vec) {
     cout << endl;
 }
 
-bool encode(const vector<uchar>& data, const vector<uchar>& img) {
-    vector<uchar> out(img);
-    int d = 0; 
-    int i = 2; 
-
-    for (; d < data.size(); d++, i += 3) {
-        out[i] = data[d]; 
-    }
-
-    vecify(out);
-    ofstream output_img; 
-    output_img.open("output.ppm", std::ios::binary | std::ios::out);
-    output_img << "P6\n16 16\n255\n";
-    output_img.write(reinterpret_cast<char*>(out.data()), out.size());
-
-    return true;
+// utils ------------------------------------------------------------------
+bool check(int src, int dst) {
+    return src + sizeof(CHECK) < dst / 3;
 }
 
-bool decode(const vector<uchar>& img) {
-    // somehow get the file from the image
-    return false;
+string strline(FILE* file, char delim) {
+    char* buf = nullptr; 
+    string line;
+    int c; 
+    
+    do { // ah yes bad style
+        c = fgetc(file); 
+        line += c;
+    } while (c != delim); 
+
+    line.pop_back();
+    return line;
 }
 
-bool check(int dsize, int isize) {
-    // does file fit into image?
-    return dsize + sizeof(MAGIC) < isize / 3;
-}
-
-// Dude what version of cpp am i using
-int file_size(ifstream& file) {
-    file.seekg(0, ios::end); 
-    auto size = file.tellg(); 
-    file.seekg(0, ios::beg); 
+// "just stat it"
+int file_size(FILE* file) {
+    fseek(file, 0, SEEK_END); 
+    int size = ftell(file);
+    rewind(file);
 
     return size;
 }
 
-vector<uchar> bin(ifstream& file, int size) {
-    vector<uchar> bytes(size); 
-    if (file.read(reinterpret_cast<char*>(bytes.data()), size)) {
-        return bytes;
+// ppm ops ------------------------------------------------
+bool encode_ppm(txt src, ppm_data ppm) {
+    vector<byte> out(ppm.data);
+    int s = 0; 
+    int i = 2; 
+
+    for (int s = 0, i = 2; s < src.data.size(); s++, i += 3) {
+        out[i] = src.data[s]; 
     }
 
-    return {};
+    vecify(out);
+
+    FILE* output = fopen("output.ppm", "wb"); 
+    string header = magics[PPM] + '\n' + to_string(ppm.w) + ' ' + to_string(ppm.h) + '\n' + to_string(ppm.max) + '\n';
+    fwrite(header.data(), sizeof(byte), header.size() * sizeof(byte), output);
+    fwrite(out.data(), sizeof(byte), out.size() * sizeof(byte), output);
+    fclose(output);
+    
+    return true;
 }
 
-vector<uchar> ppm_bin(ifstream& file, int size) {
-    string magic;
-    int w, h, max; 
-    vector<char> bytes;
-
-    file >> magic; 
-    if (magic != "P6") {
-        cerr << magic << endl;
-        return {};
-    }
-    cout << "P6 detected" << endl; 
-
-    file >> w >> h >> max; 
-    assert (file.get() == '\n');
-    if (max > 255) {
-        cerr << max << endl;
-        return {}; 
-    }
-
-    cout << "Img dims: " << w << " x " << h << endl;
-    cout << "Max RGB: " << max << endl;
-
-    return bin(file, w * h * 3); 
+bool decode_ppm(const vector<byte>& img) {
+    return false;
 }
 
+bool set_ppm(FILE* file, img& image) {
+    ppm_data ppm = {-1, -1, -1, {}};
 
+    ppm.w = stoi(strline(file, ' '));
+    ppm.h = stoi(strline(file, '\n'));
+    ppm.max = stoi(strline(file, '\n'));
+    // error handle needed
 
+    cout << "Img dims: " << ppm.w << " x " << ppm.h << endl;
+    cout << "Max RGB: " << ppm.max << endl;
+
+    ppm.data.resize(ppm.w * ppm.h * 3);
+    fread(&ppm.data[0], sizeof(byte), ppm.data.size() * sizeof(byte), file);
+    
+    image.datasize = ppm.data.size();
+    image.ppm = ppm;
+
+    return true;
+}
+
+// readers -----------------------------------------------------------
+txt read_txt(char* filename) {
+    txt input = {-1, {}};
+
+    FILE* file = fopen(filename, "rb"); 
+    if (!file) {
+        fclose(file);
+        return input;
+    }
+    input.size = file_size(file); 
+    input.data.resize(input.size);
+    fread(&input.data[0], sizeof(byte), input.size * sizeof(byte), file);
+    fclose(file);
+
+    return input;
+}
+
+img read_img(const char* filename) {
+    img image = {UNKNOWN, {}};
+
+    FILE* file = fopen(filename, "rb"); 
+    if (!file) {
+        fclose(file);
+        return image; 
+    }
+
+    string magic = strline(file, '\n');
+    cout << magic << endl;
+    if (magic == "P6") {
+        if (!set_ppm(file, image)) {
+            fclose(file);
+            return image;
+        }
+        image.type = PPM; 
+    } 
+    fclose(file);
+
+    return image;
+}
+
+// main --------------------------------------------------------------------
 void usage(char* prog) {
     // not how it should work
     cout << "Usage: " << prog << " [options] [file.txt] [img.ppm]" << endl 
@@ -106,31 +174,30 @@ void usage(char* prog) {
 }
 
 int main(int argc, char* argv[]) {
-    // need function for reading inputs
-    ifstream dfile(argv[1], ifstream::binary); 
-    auto dsize = file_size(dfile); 
-    cout << dsize << endl;
-    auto d = bin(dfile, dsize); 
-    if (d.empty()) {
-        cerr << "Data file read error" << endl;
+    txt input = read_txt(argv[1]); 
+    if (input.size < 0) {
+        cerr << "input file read error" << endl;
         return EXIT_FAILURE;
+    }
+    cout << input.size << endl;
+
+    img image = read_img(argv[2]); 
+    if (image.type == UNKNOWN) {
+        cerr << "image file read error" << endl;
+        return EXIT_FAILURE;
+    }
+    cout << image.datasize << endl;
+
+    if (!check(input.size, image.datasize)) {
+        cerr << "input size " << input.size << " too large for encoding into img size " << image.datasize << endl;
+        return EXIT_FAILURE;
+    }
+    
+    if (image.type == PPM) {
+        encode_ppm(input, image.ppm);
     }
 
-    ifstream ifile(argv[2], ifstream::binary);
-    auto isize = file_size(ifile);
-    cout << isize << endl;
-    auto i = ppm_bin(ifile, isize); 
-    if (i.empty()) {
-        cerr << "Image file read error" << endl;
-        return EXIT_FAILURE;
-    }
-
-    if (!check(d.size(), i.size())) {
-        cerr << "Data size " << d.size() << " too large for encoding into img size " << i.size() << endl;
-        return EXIT_FAILURE;
-    }
-    encode(d, i);
-    vecify(d);
-    vecify(i);
+    vecify(input.data);
+    vecify(image.ppm.data);
     return EXIT_SUCCESS;
 }
