@@ -41,6 +41,8 @@ typedef struct txt {
     vector<byte> data;
 } txt; // redundant fields :heart_eyes:
 
+img read_img(const char* filename);
+
 // debug ---------------------------------------------------
 template<class T>
 void vecify(vector<T>& vec) {
@@ -80,7 +82,21 @@ int file_size(FILE* file) {
 }
 
 // ppm ops ------------------------------------------------
-bool encode_ppm(txt src, ppm_data ppm) {
+bool decode_ppm(const char* filename) {
+    vector<byte> out;
+    img image = read_img(filename); 
+
+    for (int i = 2; i < image.datasize && image.ppm.data[i]; i += 3) {
+        out.push_back(image.ppm.data[i]);
+    }
+
+    FILE* output = fopen("msg.txt", "wb");
+    fwrite(out.data(), sizeof(byte), out.size() * sizeof(byte), output);
+    fclose(output);
+    return true;
+}
+
+bool encode_ppm(const txt& src, const ppm_data& ppm) {
     vector<byte> out(ppm.data);
     int s = 0; 
     int i = 2; 
@@ -97,11 +113,8 @@ bool encode_ppm(txt src, ppm_data ppm) {
     fwrite(out.data(), sizeof(byte), out.size() * sizeof(byte), output);
     fclose(output);
     
+    decode_ppm("output.ppm");
     return true;
-}
-
-bool decode_ppm(const vector<byte>& img) {
-    return false;
 }
 
 bool set_ppm(FILE* file, img& image) {
@@ -125,7 +138,7 @@ bool set_ppm(FILE* file, img& image) {
 }
 
 // readers -----------------------------------------------------------
-txt read_txt(char* filename) {
+txt read_txt(const char* filename) {
     txt input = {-1, {}};
 
     FILE* file = fopen(filename, "rb"); 
@@ -133,10 +146,12 @@ txt read_txt(char* filename) {
         fclose(file);
         return input;
     }
-    input.size = file_size(file); 
+    input.size = file_size(file) + 1; 
     input.data.resize(input.size);
     fread(&input.data[0], sizeof(byte), input.size * sizeof(byte), file);
     fclose(file);
+
+    input.data[input.size - 1] = '\0';
 
     return input;
 }
